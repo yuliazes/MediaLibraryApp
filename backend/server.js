@@ -1,9 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const dotenv = require('dotenv');
-
-dotenv.config();  // Load environment variables
+require('dotenv').config(); // Load environment variables
+const authRoutes = require('./routes/auth'); 
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -16,6 +15,9 @@ app.use(express.json());  // JSON parsing middleware should come before routes
 mongoose.connect(process.env.MONGODB_URI)
     .then(() => console.log('MongoDB connected'))
     .catch((error) => console.error('MongoDB connection error:', error));
+
+// Authentication Routes
+app.use('/api/auth', authRoutes);  // Ensure this line is present and correct
 
 // Import Routes
 const bookRoutes = require('./routes/books');

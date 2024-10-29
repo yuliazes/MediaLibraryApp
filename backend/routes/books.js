@@ -1,11 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const Book = require('../models/Book');
+const authMiddleware = require('../middleware/authMiddleware');
 
 // Route to add a new book
-router.post('/add', async (req, res) => {
+router.post('/add', authMiddleware, async (req, res) => {
     try {
-        const newBook = new Book(req.body);
+        const newBook = new Book({
+            ...req.body,
+            userId: req.user.userId  // Link the book to the logged-in user
+        });
         await newBook.save();
         res.status(201).json(newBook);
     } catch (error) {
@@ -13,29 +17,82 @@ router.post('/add', async (req, res) => {
     }
 });
 
-// Route to get all books
-router.get('/', async (req, res) => {
+// Get all books with filtering, search, pagination, sorting, and user restriction
+router.get('/', authMiddleware, async (req, res) => {
     try {
-        const books = await Book.find();
-        res.json(books);
+        const { title, author, status, minRating, maxRating, page = 1, limit = 10, sortBy = 'title' } = req.query;
+        const query = { userId: req.user.userId };  // Restrict to the current user's books
+
+        // Filter by title (search)
+        if (title) {
+            query.title = { $regex: title, $options: 'i' }; // case-insensitive
+        }
+
+        // Filter by author (search)
+        if (author) {
+            query.author = { $regex: author, $options: 'i' };
+        }
+
+        // Filter by status
+        if (status) {
+            query.status = status;
+        }
+
+        // Filter by rating range
+        if (minRating || maxRating) {
+            query.rating = {};
+            if (minRating) query.rating.$gte = Number(minRating); // greater than or equal to
+            if (maxRating) query.rating.$lte = Number(maxRating); // less than or equal to
+        }
+
+        // Pagination
+        const pageNumber = parseInt(page);
+        const pageSize = parseInt(limit);
+        const skip = (pageNumber - 1) * pageSize;
+
+        // Sorting
+        const sortOptions = {};
+        sortOptions[sortBy] = 1; // Sort by ascending order (use -1 for descending)
+
+        const books = await Book.find(query)
+            .sort(sortOptions)
+            .skip(skip)
+            .limit(pageSize);
+
+        // Total count (for pagination metadata)
+        const totalBooks = await Book.countDocuments(query);
+        res.json({
+            totalBooks,
+            totalPages: Math.ceil(totalBooks / pageSize),
+            currentPage: pageNumber,
+            books
+        });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
+
 // Update a book by ID
-router.put('/:id', async (req, res) => {
+router.put('/:id', authMiddleware, async (req, res) => {
     try {
-        const updatedBook = await Book.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+        // Find the book and ensure it belongs to the user
+        const updatedBook = await Book.findOneAndUpdate(
+            { _id: req.params.id, userId: req.user.userId },  // Check that the book belongs to the user
+            req.body,
+            { new: true, runValidators: true }
+        );
         if (!updatedBook) return res.status(404).json({ error: 'Book not found' });
         res.json(updatedBook);
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
 });
+
 // Delete a book by ID
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authMiddleware, async (req, res) => {
     try {
-        const deletedBook = await Book.findByIdAndDelete(req.params.id);
+        // Find the book and ensure it belongs to the user
+        const deletedBook = await Book.findOneAndDelete({ _id: req.params.id, userId: req.user.userId });
         if (!deletedBook) return res.status(404).json({ error: 'Book not found' });
         res.json({ message: 'Book deleted successfully' });
     } catch (error) {
