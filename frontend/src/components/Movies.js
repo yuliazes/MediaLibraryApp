@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import AddMovie from './AddMovie';
 
 const Movies = () => {
@@ -40,7 +41,13 @@ const Movies = () => {
             <AddMovie onAdd={handleAddMovie} />
             <ul>
                 {movies.map((movie) => (
-                    <li key={movie._id}>{movie.title}</li>
+                    <li key={movie._id}>
+                    <h2>{movie.title}</h2>
+                    <p>Release Date: {movie.releaseDate}</p>
+                    <p>Status: {movie.status}</p>
+                    <p>Rating: {movie.rating}</p>
+                    <Link to={`/movies/${movie._id}`}>View Details</Link> {/* Link to detailed view */}
+                </li>
                 ))}
             </ul>
         </div>

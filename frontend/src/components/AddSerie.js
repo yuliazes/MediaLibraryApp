@@ -5,7 +5,8 @@ import api from '../services/api';
 const AddSerie = ({ onAdd }) => {
     const [title, setTitle] = useState('');
     const [releaseDate, setReleaseDate] = useState('');
-    const [status, setStatus] = useState('To Watch');
+    const [status, setStatus] = useState('Wishlist');
+    const [category, setCategory] = useState('');
     const [rating, setRating] = useState(0);
     const [message, setMessage] = useState('');
 
@@ -17,11 +18,13 @@ const AddSerie = ({ onAdd }) => {
                 releaseDate,
                 status,
                 rating,
+                category
             });
             setMessage('Serie added successfully!');
             setTitle('');
             setReleaseDate('');
-            setStatus('To Read');
+            setStatus('Wishlist');
+            setCategory('');
             setRating(0);
 
             // Call onAdd to update the list in the parent component
@@ -56,6 +59,27 @@ const AddSerie = ({ onAdd }) => {
                     <label>Rating:</label>
                     <input type="number" value={rating} onChange={(e) => setRating(e.target.value)} min="0" max="5" />
                 </div>
+                <div>
+    <label>Category:</label>
+    <select
+        value={category}
+        onChange={(e) => setCategory(e.target.value)}
+    >
+        <option value="">Select Category</option>
+        <option value="action">Action</option>
+        <option value="comedy">Comedy</option>
+        <option value="drama">Drama</option>
+        <option value="horror">Horror</option>
+        <option value="science-fiction">Science Fiction</option>
+        <option value="fantasy">Fantasy</option>
+        <option value="romance">Romance</option>
+        <option value="thriller">Thriller</option>
+        <option value="mystery">Mystery</option>
+        <option value="documentary">Documentary</option>
+        <option value="animation">Animation</option>
+        <option value="adventure">Adventure</option>
+    </select>
+</div>
                 <button type="submit">Add Serie</button>
             </form>
             {message && <p>{message}</p>}

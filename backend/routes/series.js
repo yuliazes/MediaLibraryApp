@@ -3,18 +3,43 @@ const router = express.Router();
 const Serie = require('../models/Serie');
 const authMiddleware = require('../middleware/authMiddleware');
 
-
-// Add a new serie
+// Add a new series
 router.post('/add', authMiddleware, async (req, res) => {
     try {
+        const { title, releaseDate, rating, status } = req.body;
+
+        // Check if a series with the same title and release date already exists
+        const existingSerie = await Serie.findOne({ title, releaseDate });
+        if (existingSerie) {
+            return res.status(400).json({ error: 'This series already exists in the library.' });
+        }
+
+        // Create a new series if it's unique
         const newSerie = new Serie({
-            ...req.body,
-            userId: req.user.userId  // Associate the series with the logged-in user
+            title,
+            releaseDate,
+            description,
+            category,  // Save the category
+            userId: req.user.userId  // Link the series to the logged-in user
         });
+
         await newSerie.save();
         res.status(201).json(newSerie);
     } catch (error) {
         res.status(400).json({ error: error.message });
+    }
+});
+
+// Route to get a series by ID
+router.get('/:id', authMiddleware, async (req, res) => {
+    try {
+        const series = await Serie.findById(req.params.id);
+        if (!series) {
+            return res.status(404).json({ error: 'Series not found' });
+        }
+        res.json(series);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 });
 
@@ -68,7 +93,7 @@ router.get('/', authMiddleware, async (req, res) => {
     }
 });
 
-// Update a serie by ID
+// Update a series by ID
 router.put('/:id', authMiddleware, async (req, res) => {
     try {
         // Find the series and ensure it belongs to the user
@@ -77,20 +102,20 @@ router.put('/:id', authMiddleware, async (req, res) => {
             req.body,
             { new: true, runValidators: true }
         );
-        if (!updatedSerie) return res.status(404).json({ error: 'Serie not found' });
+        if (!updatedSerie) return res.status(404).json({ error: 'Series not found' });
         res.json(updatedSerie);
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
 });
 
-// Delete a serie by ID
+// Delete a series by ID
 router.delete('/:id', authMiddleware, async (req, res) => {
     try {
         // Find the series and ensure it belongs to the user
         const deletedSerie = await Serie.findOneAndDelete({ _id: req.params.id, userId: req.user.userId });
-        if (!deletedSerie) return res.status(404).json({ error: 'Serie not found' });
-        res.json({ message: 'Serie deleted successfully' });
+        if (!deletedSerie) return res.status(404).json({ error: 'Series not found' });
+        res.json({ message: 'Series deleted successfully' });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

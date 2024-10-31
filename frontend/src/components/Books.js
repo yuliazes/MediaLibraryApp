@@ -1,29 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import AddBook from './AddBook';
+import './Books.css';
 
 const Books = () => {
     const [books, setBooks] = useState([]);
     const [error, setError] = useState('');
     const navigate = useNavigate();
-
+    
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (!token) {
-            // Redirect to login if no token
             navigate('/login');
             return;
         }
 
-        // Fetch books from API
         api.get('/books')
             .then((response) => {
-                console.log('API response:', response.data); // Log the response here
-                setBooks(response.data.books);
+                setBooks(response.data.books || []);
             })
-            .catch((err) => {
-                console.error('Error fetching books:', err);
+            .catch(() => {
                 setError('Failed to load books');
             });
     }, [navigate]);
@@ -32,19 +29,24 @@ const Books = () => {
         setBooks([...books, newBook]);
     };
 
-    if (error) {
-        return <div>{error}</div>;
-    }
+    if (error) return <div className="error-message">{error}</div>;
 
     return (
-        <div>
-            <h1>Media Library - Books</h1>
+        <div className="library-container">
+            <h1 className="library-title">Books Library</h1>
             <AddBook onAdd={handleAddBook} />
-            <ul>
+            <div className="books-grid">
                 {books.map((book) => (
-                    <li key={book._id}>{book.title}</li>
+                    <div className="book-card" key={book._id}>
+                        <h2 className="book-title">{book.title}</h2>
+                        <p className="book-author">by {book.author}</p>
+                        <p className="book-release-date">{new Date(book.releaseDate).toLocaleDateString()}</p>
+                        <p className="book-status">Status: {book.status}</p>
+                        <p className="book-rating">Rating: {book.rating}</p>
+                        <Link to={`/books/${book._id}`} className="details-link">View Details</Link>
+                    </div>
                 ))}
-            </ul>
+            </div>
         </div>
     );
 };

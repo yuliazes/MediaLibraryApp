@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import AddSerie from './AddSerie';
 
 const Series = () => {
@@ -39,7 +40,13 @@ const Series = () => {
             <AddSerie onAdd={handleAddSerie} />
             <ul>
                 {series.map((serie) => (
-                    <li key={serie._id}>{serie.title}</li>
+                    <li key={serie._id}>
+                    <h2>{serie.title}</h2>
+                    <p>Release Date: {serie.releaseDate}</p>
+                    <p>Status: {serie.status}</p>
+                    <p>Rating: {serie.rating}</p>
+                    <Link to={`/series/${serie._id}`}>View Details</Link> {/* Link to detailed view */}
+                </li>
                 ))}
             </ul>
         </div>

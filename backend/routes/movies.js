@@ -6,14 +6,41 @@ const authMiddleware = require('../middleware/authMiddleware');
 // Add a new movie
 router.post('/add', authMiddleware, async (req, res) => {
     try {
+        const { title, releaseDate,  rating, category, status} = req.body;
+
+        // Check if a movie with the same title and release date already exists
+        const existingMovie = await Movie.findOne({ title, releaseDate });
+        if (existingMovie) {
+            return res.status(400).json({ error: 'This movie already exists in the library.' });
+        }
+
+        // Create a new movie if it's unique
         const newMovie = new Movie({
-            ...req.body,
-            userId: req.user.userId  // Associate the movie with the logged-in user
+            title,
+            releaseDate,
+            rating, 
+            status,
+            category,  // Save the category
+            userId: req.user.userId  // Link the movie to the logged-in user
         });
+
         await newMovie.save();
         res.status(201).json(newMovie);
     } catch (error) {
         res.status(400).json({ error: error.message });
+    }
+});
+
+// Route to get a movie by ID
+router.get('/:id', authMiddleware, async (req, res) => {
+    try {
+        const movie = await Movie.findById(req.params.id);
+        if (!movie) {
+            return res.status(404).json({ error: 'Movie not found' });
+        }
+        res.json(movie);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 });
 

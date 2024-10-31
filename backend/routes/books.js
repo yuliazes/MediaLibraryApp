@@ -3,20 +3,45 @@ const router = express.Router();
 const Book = require('../models/Book');
 const authMiddleware = require('../middleware/authMiddleware');
 
-// Route to add a new book
 router.post('/add', authMiddleware, async (req, res) => {
     try {
+        const { title, author, releaseDate, rating, category, status } = req.body;
+
+        // Check if a book with the same title and author already exists
+        const existingBook = await Book.findOne({ title, author });
+        if (existingBook) {
+            return res.status(400).json({ error: 'This book already exists in the library.' });
+        }
+
+        // Create a new book if it's unique
         const newBook = new Book({
-            ...req.body,
+            title,
+            author,
+            releaseDate,
+            rating,
+            status,
+            category,  // Save the category
             userId: req.user.userId  // Link the book to the logged-in user
         });
+
         await newBook.save();
         res.status(201).json(newBook);
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
 });
-
+// Route to get a book by ID
+router.get('/:id', async (req, res) => {
+    try {
+        const book = await Book.findById(req.params.id);
+        if (!book) {
+            return res.status(404).json({ error: 'Book not found' });
+        }
+        res.json(book);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 // Get all books with filtering, search, pagination, sorting, and user restriction
 router.get('/', authMiddleware, async (req, res) => {
     try {
