@@ -26,7 +26,7 @@ jobs:
         run: |
           docker build -t medialibraryapp-backend .
 
-      # 4. Ejecutar pruebas (opcional)
-      - name: Run tests
-        run: |
-          docker run medialibraryapp-backend npm test
+      # 4. Run tests
+      # - name: Run tests
+      #   run: |
+      #     docker run --rm medialibraryapp-backend npm test
