@@ -1,20 +1,20 @@
-# Usa una imagen base
+# Usa una imagen base de Node.js
 FROM node:16-alpine
 
-# Establece el directorio de trabajo
-WORKDIR /app
+# Establece el directorio de trabajo en el contenedor
+WORKDIR /app/backend
 
-# Copia los archivos de configuración para instalar dependencias
-COPY backend/package*.json ./backend/
+# Copia el archivo package.json y package-lock.json (si existe) al contenedor
+COPY backend/package*.json ./
 
 # Instala las dependencias
-RUN npm install --prefix backend
+RUN npm install
 
-# Copia el código del backend
-COPY backend ./backend
+# Copia el resto del código del backend al contenedor
+COPY backend .
 
-# Expone el puerto
+# Expone el puerto que usa tu aplicación
 EXPOSE 5000
 
 # Comando para iniciar la aplicación
-CMD ["npm", "start", "--prefix", "backend"]
+CMD ["npm", "start"]
