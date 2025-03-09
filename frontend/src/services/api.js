@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'http://localhost:5002/api', // Your backend URL
+    baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api', // Updated port to match backend
 });
 
 // Add a request interceptor to include the token in each request
